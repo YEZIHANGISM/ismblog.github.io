@@ -1,0 +1,147 @@
+---
+title: "Docker API"
+categories:
+  - Docker
+tags:
+  - docker
+---
+
+
+# **常用命令大全**
+        docker command --help
+## 系统命令
+### 查看磁盘信息
+        docker system df
+### 清理不被使用的数据
+        docker system prune
+### 系统信息
+        docker system info
+## 卷
+### 展示卷列表
+        docker volume ls
+### 清理未被使用的卷
+        docker volume prune
+### 删除卷
+        docker volume rm
+## 容器命令
+### 运行容器
+        docker run [option] container
+        -i              以交互模式运行容器
+        -t              为启动的容器分配一个终端
+        -p              分配一个端口映射到内部容器的端口
+                -p 8088:8080
+                -p 127.0.0.1:8088:8080
+                -p 127.0.0.1::8080
+        -P              分配随机端口 形式：-P
+        -d              以守护进程的方式运行容器
+        -v              绑定容器卷，目录分享
+        -e              设置环境变量
+        --name          别名
+        --rm            退出立即删除
+### 查看正在运行的容器
+        docker ps
+        -a              查看所有容器，包括已停止的
+        -q              静默模式，只显示容器编号
+        -l              显示最近创建的容器
+        -n              显示最近创建的n个容器
+        -s              显示总的文件大小
+
+### 启动/暂停/结束暂停/停止/重启容器
+        docker start/pause/unpause/stop/restart container
+### 退出容器
+        exit            ————退出并停止
+        CTRL+P+Q        ————退出不停止
+### 在一个运行的容器中执行命令
+        docker exec [option] container command
+### 进入容器
+        docker attach container
+### 查看容器内进程
+        docker top container
+### 查看容器细节
+        docker inspect container
+### 查看容器日志
+        docker logs [option] container
+        -t              显示时间戳
+        --tail          从日志末尾开始显示的行数，默认为全部
+        -f              跟踪日志，不断输出
+## 镜像命令
+### 从容器创建建镜像
+        docker commit [option] container repository
+        -m              提交镜像的描述信息
+        -a              镜像的作者
+### 从Dockerfile创建镜像
+        docker build
+        -t              指定创建的目标镜像名
+        -f              Dockerfile文件名
+        https://docs.docker.com/engine/reference/commandline/build/
+### 搜索镜像
+        docker search repository
+        -s n    指定搜索条目，不小于n
+# **Dockerfile**
+https://docs.docker.com/engine/reference/builder/
+
+## 利用Dockerfile构建镜像
+在空目录创建Dockerfile文件
+        
+        touch /mydocker/Dockerfile
+
+添加以下内容
+        
+        # Dockerfile示例
+        FROM centos        # 新构建的镜像来源
+        VOLUMES ['/datavolumncontainer']    # 创建容器卷，用于容器与宿主机的目录共享
+        CMD echo 'done'
+        CMD /bin/bash
+
+        # 常用命令说明
+        MAINTAINER      镜像的维护者姓名与邮箱地址
+        RUN             容器构建时运行的命令
+        EXPOSE          当前容器的对外端口
+        WORKDIR         创建容器后，终端登录的默认路径
+        ENV             构建镜像过程中设置环境变量
+        ADD             将宿主机目录下的文件拷贝至镜像且自动解压
+        COPY            与ADD类似，但不会解压
+        VOLUME          容器数据卷
+        CMD             容器启动时运行的命令，只有最后一个CMD命令会被执行
+        ENTRYPOINT      与CMD类似，当执行docker run时，在命令后方指定参数，参数会追加到ENTRYPOINT指定的命令中
+
+        ONBUILD         指定一个延迟执行的命令，延迟到当前Dockerfile的子Dockerfile被创建时执行
+
+        更多命令请参考：https://docs.docker.com/engine/reference/builder/
+
+创建镜像
+
+        docker build -f mydocker/Dockerfile -t name/centos .
+
+        # 这里的(.)指上下文路径（当前路径）,创建镜像时将上下文路径中的文件一起打包生成镜像。
+        # 因为生成镜像的过程是在server端完成的，无法使用本机的文件，所以需要一起打包。
+
+## 容器间的继承和目录共享
+创建继承自前一个容器的容器。首先创建第一个镜像的容器
+
+        docker run -it --name dc1 yzh/centos
+接着创建一个继承自容器的容器
+
+        docker run -it --name dc2 --volumes-from dc1 yzh/centos
+容器之间可以进行目录共享，删除父容器不会影响子容器间数据的共享，共享会一直持续到没有容器为止
+
+# **Docker-Compose**
+## 项目结构
+        > project\
+            > project\                  项目代码
+            > compose\                  环境编排
+                > local\                本地环境
+                    > django\
+                        > Dockerfile           
+                > production\           生产环境
+                    > django\
+                        > Dockerfile           
+                    > nginx\
+                        > Dockerfile
+            > production.yml            生产环境的docker编排文件
+            > local.yml                 本地环境的docker编排文件
+
+## docker-compose的工作流程
++ 编写Dockerfile，用于生成所需的image
++ 编写docker-compose.yml文件，用于将所有服务串联起来
++ docker-compose up，启动项目，这将创建Dockerfile定义的镜像和有yml文件定义的容器
