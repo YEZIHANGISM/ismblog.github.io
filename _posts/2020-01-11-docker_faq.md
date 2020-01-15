@@ -8,15 +8,20 @@ tags:
 
 # 启动容器报错
 宿主机是win10，安装docker后，拉取了一个centos镜像，又在镜像上安装docker（禁止套娃），安装docker-ce时报错
-
-    Failed to get D-Bus connection: Operation not permitted
+```
+Failed to get D-Bus connection: Operation not permitted
+```
 ## 解决办法
 以下方式生成容器
-    
-    docker run -d --privileged=true -e "container=docker" container /usr/sbin/init
+```    
+docker run -d --privileged=true -e "container=docker" container /
+
+usr/sbin/init
+```
 进入容器
-    
-    docker exec -it container /bin/bash
+```
+docker exec -it container /bin/bash
+```
 如果容器已经生成，只能重新从镜像根据上一条命令生成容器了。
 # Docker服务未启动
 进入centos中，运行docker命令报错
@@ -80,18 +85,18 @@ tags:
 
     systemctl restart docker
 # 创建镜像时提示空间不足
-        no space left on device
+    no space left on device
 ## 解决办法
 查看docker磁盘信息
         
-        docker system df
-        TYPE                TOTAL               ACTIVE              SIZE                RECLAIMABLE
-        Images              11                  1                   2.43GB              1.912GB (78%)
-        Containers          1                   1                   109.6GB             0B (0%)
-        Local Volumes       0                   0                   0B                  0B
-        Build Cache         0                   0                   0B                  0B
+    docker system df
+    TYPE                TOTAL               ACTIVE              SIZE                RECLAIMABLE
+    Images              11                  1                   2.43GB              1.912GB (78%)
+    Containers          1                   1                   109.6GB             0B (0%)
+    Local Volumes       0                   0                   0B                  0B
+    Build Cache         0                   0                   0B                  0B
 ### 清理无用的系统空间
         
-        docker system prune
+    docker system prune
 ### 清理无用的卷
-        docker volume prune
+    docker volume prune
