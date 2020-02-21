@@ -143,7 +143,6 @@ class CustomAPIView:
 
 # 序列化器
 序列化器允许*queryset*和模型实例等复杂的数据类型转化为python数据类型，并且能够简单地被渲染。
-
 ## Serializer
 定义一个简单模型
 ```python
@@ -326,8 +325,135 @@ class CustomSerializer(serializers.Serializer):
 ```
 
 ### Validators
-可以为单个的字段添加多个验证
+可以为单个字段添加多个自定义验证，验证也可重用
+```python
+class CustomValidation:
 
+    def __init__(self, title):
+        self.title = title
+
+    def __call__(self, value):
+        if not self.value.startswith(self.title):
+            message = "title must start with %s" % self.value
+            raise serializers.ValidationError(message)
+```
+
+接下来在字段中引用
+```python
+# serializers.py
+
+class CustomSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(validators=[CustomValidation("ism_")])
+```
+
+# 通用视图
+## APIView
+*APIView*继承自*Django*的*View*，在此基础上增加了很多属性。
+```python
+class APIView(View):
+
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+    parser_classes = api_settings.DEFAULT_PARSER_CLASSES
+    authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES
+    throttle_classes = api_settings.DEFAULT_THROTTLE_CLASSES
+    permission_classes = api_settings.DEFAULT_PERMISSION_CLASSES
+    content_negotiation_class = api_settings.DEFAULT_CONTENT_NEGOTIATION_CLASS
+    metadata_class = api_settings.DEFAULT_METADATA_CLASS
+    versioning_class = api_settings.DEFAULT_VERSIONING_CLASS
+```
+
+## GenericAPIView
+*GenericAPIView*继承自*APIView*，是其他视图的通用基本视图。同样定义了一些属性以及常用方法
+```python
+class GenericAPIView(APIView):
+    # 该属性不应该在方法中直接使用，而是调用`get_queryset()`获取
+    queryset = None
+    
+    serializer_class = None
+
+    lookup_field = 'pk'
+    lookup_url_kwargs = None
+
+    filter_backends = api_settings.DEFAULT_FILTER_BACKENDS
+    
+    pagination_class = api_settings.DEFAULT_PAGINATION_CLASS
+
+    # 常用方法
+    def get_queryset(self):...
+
+    def get_object(self):...
+
+    def get_serializer(self, *args, **kwargs):...
+
+    ...
+```
+
+## mixins
+*mixins*中定义了用于基本视图中的行为方法，即是常见的对*queryset*的*CURD*操作。*mixins*一共提供了五种行为操作的类。
+- ListModelMixin：提供list方法，返回列表类型的结果集
+- CreateModelMixin：提供create方法，创建和保存新的模型实例
+- RetrieveModelMixin：提供retrieve方法，返回一个详细的模型实例信息
+- UpdateModelMixin：提供update方法，修改和保存已有模型实例
+- DestoryModelmixin：提供delete方法，删除模型实例
+
+以下是一些通过继承*mixins*提供的一个或多个类以及通用视图*GenericAPIView*得到的视图函数。
+- CreateAPIView
+- ListAPIView
+- RetrieveAPIView
+- DestroyAPIView
+- UpdateAPIView
+- ListCreateAPIView
+- RetrieveUpdateAPIView
+- RetrieveDestroyAPIView
+- RetrieveUpdateDestroyAPIView
+
+# ViewSet（视图集）
+*ViewSet*指将一系列相关视图组合在一个单个类中，形成一套处理逻辑。*ViewSet*不提供处理函数如*get*或*post*，只提供动作函数如*list*或*create*。
+```python
+# views.py
+
+from rest_framework import viewsets
+
+class CustomViewSet(viewsets.ViewSet):
+    def list(self, request):
+        # return list of queryset
+
+    def retrieve(self, request, pk=None):
+        # return detail of one model instance
+```
+
+*ViewSet*类继承自*ViewSetMixin*和*APIView*，*ViewSetMixin*中对*as_view*方法做了修改，接收*action*参数，根据参数来分发给目标动作函数。
+```python
+custom_list = CustomViewSet.as_view(action={"get":"list"})
+custom_detail = CustomViewSet.as_view(action={"get":"retrieve"})
+```
+
+> 注意：通常情况下，我们不会这样做，而是向路由系统注册ViewSet，让url自动生成。这会在**路由**一节中介绍
+
+常用的视图集类：
+- ViewSet
+- GenericViewSet
+- ModelViewSet
+- ReadOnlyModelViewSet
+
+## action装饰器
+如果你有特别的方法也需要路由，那么可以为其添加*action*装饰器
+```python
+# views.py
+
+class CustomViewSet(ViewSet):
+
+    @action(detail=False, methods=["get"])
+    def another_queryset(self, request):
+        # return queryset
+```
+
+`detail=False`表示该方法返回一个结果集，不然就是返回一个对象。
+
+然后同样为其分发一个动作函数
+```python
+another = CustomViewSet.as_view(action={"get":"another_queryset"})
+```
 
 # 路由
 
@@ -395,4 +521,75 @@ class CustomView(APIView):
 
     def post(self, request, *args, **kwargs):
         return Response({"code":"200", "data":request.data})
+```
+
+# 分页
+## 全局配置
+```python
+# settings.py
+
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 100
+}
+```
+
+> 注意：上面两项配置都是必须的
+
+## 局部配置
+通过在视图函数中定义*pagination_class*属性。
+```python
+# views.py
+
+class CustomView(APIView):
+    pagination_class = PageNumberPagination
+```
+## 默认的三种分页风格
+- PageNumberPagination
+基于页码的分页风格。例如：页码为1，数据为10条。
+- LimitOffsetPagination
+基于位置与限量的分页风格。例如：从第10条的位置向后取10条数据。
+- CursorPagination
+基于指针的分页风格，只显示上一页和下一页。
+
+## 自定义的分页类
+通过实现定制的分页类，可以定制分页的属性，同时也能继承分页的功能
+```python
+from rest_framework import pagination
+
+class CustomPagination(pagination.PageNumberPagination):
+    page_size = 100
+
+    # url中请求页码的参数
+    page_query_param = 'page'
+
+    # url中亲贵每页结果集数量的参数
+    page_size_query_param = "number"
+
+    def paginate_queryset(self, queryset, request, view):
+        ...
+```
+
+> 更多的属性配置请参考官方文档：[Pagination](https://www.django-rest-framework.org/api-guide/pagination/)
+
+### 在视图中使用
+```python
+# views.py
+
+from app.models import CustomModel
+from path.to.serializers import CustomSerializer
+from path.to.pagination import CustomPagination
+from rest_framework.response import Response
+
+class CustomView(APIView):
+    def get(self, request, *args, **kwargs):
+        custom = CustomModel.objects.all()
+        
+        page = CustomPagination()
+        page_result = page.paginate_queryset(queryset=custom, request=request, view=self)
+
+        serializer = CustomSerializer(instance=page_result, many=True)
+paginate_queryset
+
+        return Response(serializer.data)
 ```
