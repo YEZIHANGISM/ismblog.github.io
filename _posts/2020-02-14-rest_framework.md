@@ -456,6 +456,43 @@ another = CustomViewSet.as_view(action={"get":"another_queryset"})
 ```
 
 # 路由
+在使用视图集时，需要对路由进行修改，根据使用的请求方式不同、动作函数不同等原因，一个视图类有时需要分发多个路由
+```python
+# urls.py
+
+custom_list = views.CustomViewSet.as_view({
+    "get": "list",
+    "post": "create"
+})
+
+custom_detail = views.CustomViewSet.as_view({
+    "get": "retrieve",
+    "put": "update",
+    "delete": "destroy"
+})
+
+urlpatterns = [
+    path("customs/", custom_list, name="custom-list"),
+    path("custom/<int:pk>/", custom_detail, name="custom-detail")
+]
+```
+
+## DefaultRouter
+通过注册视图类来自动生成路由
+```python
+# urls.py
+
+from rest_framework import routers
+
+router = routers.DefaultRouter()
+router.register(r'customs/', views.CustomViewSet)
+
+urlpatterns = router.urls
+```
+
+它将会自动生成所有的url。
+
+*DefaultRouter*会自动生成一个*api-root view*，里面包括了所有列表视图的超链接；另外还支持.*json*后缀的*url*。
 
 # 版本
 版本控制允许在不同的客户端定制不同的行为。
