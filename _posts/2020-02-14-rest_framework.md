@@ -57,6 +57,90 @@ class CustomAPIView:
     authentication_classes = [MyAuthentication,]
 ```
 
+## JWT实现登录认证
+JWT（JSON Web Token）相比传统的token认证优势在于：
+- 可以设置token的过期时间，安全性更高
+- 减轻数据请求查询token带来的数据库压力
+
+### JWT的请求周期
+1. 客户端尝试登录操作，将验证信息发送给服务端。
+2. 服务端进行后台验证，生成jwt返回。
+3. 前端获取到jwt后保存在本地，之后的数据请求都携带jwt。
+
+### 在Django中使用
+安装jwt依赖包
+```bash
+pip install djangorestframework-jwt
+```
+
+配置相关代码
+```python
+# settings.py
+
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_jwt.authentication.JSONWebTokenAuthentication",
+    )
+}
+
+import datetime
+# 配置token的有效期
+JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
+}
+```
+
+配置*jwt*的路由
+```python
+# urls.py
+
+from rest_framework_jwt.views import obtain_jwt_token
+
+urlpatterns = [
+    ...
+    path("jwt-token-auth/", obtain_jwt_token),
+]
+```
+
+启动项目，以*POST*方法访问*http://127.0.0.1/jwt-token-auth/*，携带用户验证信息
+```python
+{
+    "username":"admin",
+    "password":"admin"
+}
+```
+
+网页将返回*token*值：
+```python
+{
+    "token": "dfhasjkfhgasdilfndisuafhasdlifbdsahfhasdjkvfadsfhdsa"
+}
+```
+创建一个视图类，用于实现*GET*请求访问
+```python
+# views.py
+from rest_framework.views import APIView
+from rest_framewort.response import Response
+
+class IndexAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        return Response("首页")
+```
+
+为视图配置路由，此处略。
+
+然后以*GET*的方式访问网页，在请求头中加入*token*信息：
+```python
+{
+    "Authorization": "JWT dfjasjfghdaslnfdsakhflasdihfkadsfadskj"
+}
+```
+
+获取到首页信息，也即表示通过了验证。
+
 # 权限
 继承*BasePermission*，并实现*has_permission*方法，可以实现自定义的权限函数
 ```python
@@ -74,8 +158,7 @@ class MyPermissions(permissions.BasePermission):
 - True
 - False
 
-> BasePermission类中还有一个has_object_permission方法，当视图继承自ModelViewSet类时，实现该方法。
-
+> BasePermission类中还有一个has_object_permission方法，是对象级别的权限认证。
 ## 全局配置
 ```python
 # settings.py
@@ -96,6 +179,8 @@ from path.to.permission import MyPermission
 class CustomAPIView:
     permission_classes = [MyPermission, ]
 ```
+
+> 注意：认证与权限应当同时添加（即使你没有设置认证），否则当权限通不过时，报错信息将只会显示认证未通过。
 
 # 节流
 控制访问频率
@@ -424,8 +509,8 @@ class CustomViewSet(viewsets.ViewSet):
 
 *ViewSet*类继承自*ViewSetMixin*和*APIView*，*ViewSetMixin*中对*as_view*方法做了修改，接收*action*参数，根据参数来分发给目标动作函数。
 ```python
-custom_list = CustomViewSet.as_view(action={"get":"list"})
-custom_detail = CustomViewSet.as_view(action={"get":"retrieve"})
+custom_list = CustomViewSet.as_view(actions={"get":"list"})
+custom_detail = CustomViewSet.as_view(actions={"get":"retrieve"})
 ```
 
 > 注意：通常情况下，我们不会这样做，而是向路由系统注册ViewSet，让url自动生成。这会在**路由**一节中介绍
@@ -452,7 +537,7 @@ class CustomViewSet(ViewSet):
 
 然后同样为其分发一个动作函数
 ```python
-another = CustomViewSet.as_view(action={"get":"another_queryset"})
+another = CustomViewSet.as_view(actions={"get":"another_queryset"})
 ```
 
 # 路由
