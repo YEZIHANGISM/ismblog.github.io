@@ -33,7 +33,7 @@ class MyAuthentication(authentication.BaseAuthentication):
 - (user, obj)   (用户，模型对象自身)这两个变量将会赋值给request.user, request.auth
 
 ## 全局配置
-在*settings.py*中配置*REST_FRAMWORK*
+在*settings.py*中配置*REST_FRAMEWORK*
 
 ```python
 # settings.py
