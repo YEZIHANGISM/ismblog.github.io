@@ -15,7 +15,7 @@ tags:
 from rest_framework import authentication
 
 class MyAuthentication(authentication.BaseAuthentication):
-    
+
     def authenticate(self, request):
         try:
             # programing your logic code here...
@@ -192,7 +192,7 @@ class CustomAPIView:
 from rest_framework import throttling
 
 class MyThrottle(throttling.BaseThrottle):
-    
+
     def allow_request(self, request, view):
         # programing your logic code here...
         return True
