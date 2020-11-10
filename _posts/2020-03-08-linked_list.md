@@ -1,6 +1,6 @@
 ---
 title: "链表"
-categoies:
+categories:
   - Data Structure
 tags:
   - Linked List
