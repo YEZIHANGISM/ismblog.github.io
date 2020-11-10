@@ -1,6 +1,6 @@
 ---
 title: "SQLAlchemy"
-categoies:
+categories:
   - SQLAlchemy
 tags:
   - ORM
