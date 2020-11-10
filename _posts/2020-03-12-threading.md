@@ -1,6 +1,6 @@
 ---
 title: "多线程"
-categoies:
+categories:
   - Python
 tags:
   - threading
