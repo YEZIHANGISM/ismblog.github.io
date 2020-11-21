@@ -148,10 +148,7 @@ def reverse_filter(value):
 app.jinja_env.filters["reverse"] = reverse_filter
 ```
 
-在模板中使用
-```jinja
-<h1>{{ name|reverse }}</h1>
-```
+通过管道符 `|` 使用过滤器
 
 ## 宏
 与`python`，将常用的代码片段抽取出来定义为宏，方便重用。
