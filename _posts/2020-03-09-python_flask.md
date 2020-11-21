@@ -148,18 +148,19 @@ def reverse_filter(value):
 app.jinja_env.filters["reverse"] = reverse_filter
 ```
 
-通过管道符 `|` 使用过滤器
+> 由于Jekyll渲染不支持|的原因，在这里就不列举过滤器的使用方式了。
+
 
 ## 宏
 与`python`，将常用的代码片段抽取出来定义为宏，方便重用。
-```
+```jinja
 <!-- macro.html -->
 
 {% macro input(name, type="text", value="") %}
-	<input type="{{ type }}", name="{{ name }}" value="{{ value|e }}">
+	<input type="{{ type }}", name="{{ name }}" value="{{ value\e }}">
 {% endmacro %}
 
-
+<!-- \表示| -->
 ```
 
 在模板中引用
