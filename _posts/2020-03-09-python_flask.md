@@ -149,7 +149,7 @@ app.jinja_env.filters["reverse"] = reverse_filter
 ```
 
 在模板中使用
-```
+```jinja
 <h1>{{ name|reverse }}</h1>
 ```
 
@@ -164,8 +164,9 @@ app.jinja_env.filters["reverse"] = reverse_filter
 
 
 ```
+
 在模板中引用
-```
+```jinja
 {% from "macro.html" import input %}
 
 <p>{{ input("password", type="password", value="enter pwd") }}</p>
@@ -173,7 +174,7 @@ app.jinja_env.filters["reverse"] = reverse_filter
 
 ### 传递上下文变量
 如果需要渲染的模板中有需要传递到宏模板的变量。在导入模板的时候可以使用`with`关键字导入上下文变量
-```
+```jinja
 <!-- index.html -->
 {% from 'macro.html' import input with context %}
 
@@ -190,7 +191,7 @@ app.jinja_env.filters["reverse"] = reverse_filter
 ```
 
 这样就可以在宏模板中使用`username`变量
-```
+```jinja
 <!-- macro.html -->
 
 {% macro input(name, type="text", value="") %}
@@ -200,13 +201,13 @@ app.jinja_env.filters["reverse"] = reverse_filter
 
 ## `set`与`with`
 使用`set`在模板中定义变量，可供模板全局使用。
-```
+```jinja
 {% set username="ismblog" %}
 <p>{{ username }}</p>
 ```
 
 使用`with`同样可以定义变量，在被包裹的代码块中使用
-```
+```jinja
 {% with username="ism" %}
 	<p>{{ username }}</p>
 {% endwith %}
