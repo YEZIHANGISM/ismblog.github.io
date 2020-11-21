@@ -148,7 +148,7 @@ def reverse_filter(value):
 app.jinja_env.filters["reverse"] = reverse_filter
 ```
 
-> 由于Jekyll渲染不支持|的原因，在这里就不列举过滤器的使用方式了。
+> 由于Jekyll渲染不支持管道符的原因，在这里就不列举过滤器的使用方式了。
 
 
 ## 宏
@@ -160,7 +160,7 @@ app.jinja_env.filters["reverse"] = reverse_filter
 	<input type="{{ type }}", name="{{ name }}" value="{{ value\e }}">
 {% endmacro %}
 
-<!-- \表示| -->
+<!-- \表示管道符 -->
 ```
 
 在模板中引用
