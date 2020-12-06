@@ -1,5 +1,5 @@
 ---
-titile: "数据处理"
+title: "数据处理"
 categories:
   - Numpy
   - Pandas

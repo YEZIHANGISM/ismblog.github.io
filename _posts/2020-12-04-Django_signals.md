@@ -1,5 +1,5 @@
 ---
-titile: "在ORM中实现主键从特定值开始自增"
+title: "在ORM中实现主键从特定值开始自增"
 categories:
   - Django
 tags:
@@ -10,7 +10,7 @@ tags:
 
 # MYSQL
 在`MySQL`中，可以通过指定`auto_increment`来设置自增的起始值
-```SQL
+```bash
 CREATE TABLE TEST(
 id int not null auto_increment primary key,
 name varchar(127) not null default 'ISM'
@@ -28,7 +28,7 @@ class ISMModel(models.Model):
 这个`model`将会创建一个默认的id字段作为主键，但是它的自增是从1开始的。所以我们可以在初始化时插入一条`id=9999`的数据然后删除，这样后续插入的数据就会从`id=10000`开始。
 
 假设一个`django`项目结构:
-```
+```python
 project
     - project
         - settings.py
